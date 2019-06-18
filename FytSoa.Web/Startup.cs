@@ -17,12 +17,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Serialization;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using Swashbuckle.AspNetCore.Swagger;
@@ -109,10 +111,10 @@ namespace FytSoa.Web
             RedisHelper.Initialization(new CSRedis.CSRedisClient(Configuration["Cache:Configuration"]));
             #endregion
 
-            services.AddMvc().AddRazorPagesOptions(options =>
-            {
-                options.Conventions.AddPageRoute("/web/index", "/");
-            });
+            //services.AddMvc().AddRazorPagesOptions(options =>
+            //{
+            //    options.Conventions.AddPageRoute("/web/index", "/");
+            //});
 
             #region Swagger UI
             services.AddSwaggerGen(options =>
@@ -173,6 +175,17 @@ namespace FytSoa.Web
             services.AddResponseCompression();
             #endregion
 
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            // 添加过滤器
+            //services.AddMvc(options =>
+            //{
+            //    //options.Filters.Add(typeof(WebApiTracingFilterAttribute));
+            //    options.Filters.Add(typeof(WebApiActionFilterAttribute));
+            //}).AddJsonOptions(options =>
+            //{
+            //    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+            //    options.SerializerSettings.DateFormatString = "yyyy-MM-dd HH:mm:ss";
+            //});
             //NLog 数据库配置
             //NLog.LogManager.Configuration.FindTargetByName<NLog.Targets.DatabaseTarget>("db").ConnectionString = Configuration.GetConnectionString("LogConnectionString");
         }
@@ -226,7 +239,14 @@ namespace FytSoa.Web
             });
             app.UseCookiePolicy();
             app.UseCors("Any");
-            app.UseMvc();
+
+            app.UseHttpsRedirection();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Home}/{action=Index}/{id?}");
+            });
         }
 
       
